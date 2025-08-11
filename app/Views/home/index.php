@@ -7,21 +7,36 @@
 
 <!-- Header dengan info user -->
 
+<style>
+    @keyframes floatY {
+        0% {
+            transform: translateY(0);
+        }
 
+        50% {
+            transform: translateY(0.2cm);
+        }
+
+        100% {
+            transform: translateY(0);
+        }
+    }
+
+    .float-animation {
+        animation: floatY 2s ease-in-out infinite;
+    }
+</style>
 <!-- Bagian Hero -->
 <section class="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-16">
     <!-- Kolom Teks -->
     <div
         class="md:w-xl text-center ml-0 md:text-left"
         style="opacity: 1; transform: translateY(0px);">
-        <h1 class="text-4xl md:text-5xl font-bold mb-2 text-blue-600">
-            Klasifikasi Bahan Pakaian <!-- Typewriter effect diganti teks statis -->
-        </h1>
+        <h1 id="typewriter" class="text-4xl md:text-5xl font-bold mb-2 text-blue-600">Klasifikasi Bahan Pakaian</h1>
         <p class="text-lg md:text-xl text-gray-600 mb-6">
             Aplikasi ini membantu Anda mengenali jenis bahan pakaian seperti
             katun, linen, poliester, dan lainnya secara otomatis dan cepat.
         </p>
-
         <!-- Tombol Aksi -->
         <div class="flex flex-col sm:flex-row gap-4 mt-8">
             <a
@@ -36,15 +51,13 @@
     </div>
 
     <!-- Kolom Gambar dengan Animasi Melayang (Diganti Gambar Statis) -->
-    <div
-        class="md:w-1/2 mb-8 md:mb-0 flex justify-center"
-        style="opacity: 1; transform: scale(1) translateY(0%);">
+    <div class="md:w-1/2 mb-8 md:mb-0 flex justify-center">
         <img
             src="<?= base_url('public/fabric.png') ?>"
             alt="Contoh Bahan Pakaian"
             width="400"
             height="400"
-            class="rounded-lg"
+            class="rounded-lg float-animation"
             loading="lazy" />
     </div>
 </section>
@@ -224,6 +237,46 @@
 </section>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const texts = [
+            "Klasifikasi Bahan Pakaian",
+            "Deteksi Katun, Linen, Poliester, dan Lainnya",
+            "Cepat, Akurat, dan Otomatis"
+        ];
+        const speed = 100; // kecepatan ketik (ms)
+        const eraseSpeed = 50; // kecepatan hapus (ms)
+        const delayBetween = 1500; // jeda sebelum hapus (ms)
+
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typewriterElement = document.getElementById("typewriter");
+
+        function typeEffect() {
+            const currentText = texts[textIndex];
+
+            if (isDeleting) {
+                typewriterElement.textContent = currentText.substring(0, charIndex - 1);
+                charIndex--;
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    textIndex = (textIndex + 1) % texts.length; // pindah teks berikutnya
+                }
+            } else {
+                typewriterElement.textContent = currentText.substring(0, charIndex + 1);
+                charIndex++;
+                if (charIndex === currentText.length) {
+                    isDeleting = true;
+                    setTimeout(typeEffect, delayBetween);
+                    return;
+                }
+            }
+            setTimeout(typeEffect, isDeleting ? eraseSpeed : speed);
+        }
+
+        typeEffect();
+    });
+
     document.getElementById("btn-lebih-lanjut").addEventListener("click", function() {
         document.getElementById("elastisitas").scrollIntoView({
             behavior: "smooth"
