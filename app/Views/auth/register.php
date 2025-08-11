@@ -1,69 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Aplikasi Data Mining Pola Tidur</title>
+    <title>Daftar Akun - FabricScan AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<!-- Mengubah warna latar belakang body menjadi coklat muda/krem -->
+<body class="bg-slate-100 min-h-screen flex flex-col items-center justify-center p-4 font-sans">
 
-<body class="bg-stone-100 flex items-center justify-center h-screen">
-    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <!-- Mengubah warna teks judul menjadi coklat gelap -->
-        <h2 class="text-2xl font-bold text-center mb-6 text-stone-800">Buat Akun Baru</h2>
+    <div class="w-full max-w-md">
+        <div class="bg-white p-8 rounded-2xl shadow-lg w-full">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Buat Akun Baru</h2>
+                <p class="text-slate-500 mt-2 text-sm">Daftar untuk mendapatkan akses penuh.</p>
+            </div>
 
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <?= session()->getFlashdata('error') ?>
-            </div>
-        <?php endif; ?>
+            <?php
+            $validation = \Config\Services::validation();
+            if ($validation->getErrors()) :
+            ?>
+                <div class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 mb-6 rounded-md" role="alert">
+                    <p class="font-bold mb-1">Terjadi Kesalahan</p>
+                    <ul class="list-disc list-inside text-sm">
+                        <?php foreach ($validation->getErrors() as $error) : ?>
+                            <li><?= esc($error) ?></li>
+                        <?php endforeach ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
 
-        <?php $validation = \Config\Services::validation(); ?>
-        <?php if ($validation->getErrors()): ?>
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <ul>
-                    <?php foreach ($validation->getErrors() as $error) : ?>
-                        <li><?= esc($error) ?></li>
-                    <?php endforeach ?>
-                </ul>
-            </div>
-        <?php endif; ?>
+            <form action="<?= site_url('register') ?>" method="post" class="space-y-5">
+                <?= csrf_field() ?>
 
-        <form action="<?= site_url('register') ?>" method="post">
-            <?= csrf_field() ?>
-            <div class="mb-4">
-                <!-- Mengubah warna label menjadi coklat gelap -->
-                <label for="username" class="block text-stone-700">Username</label>
-                <input type="text" name="username" id="username" class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-amber-600" required>
+                <div>
+                    <label for="username" class="block text-sm font-medium text-slate-700 mb-2">Username</label>
+                    <input type="text" name="username" id="username" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-slate-700 mb-2">Password</label>
+                    <input type="password" name="password" id="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                </div>
+
+                <div>
+                    <label for="password_confirm" class="block text-sm font-medium text-slate-700 mb-2">Konfirmasi Password</label>
+                    <input type="password" name="password_confirm" id="password_confirm" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 font-semibold text-base shadow-md hover:shadow-lg">
+                    Daftar
+                </button>
+            </form>
+
+            <div class="text-center mt-8">
+                <p class="text-sm text-slate-600">
+                    Sudah punya akun?
+                    <a href="<?= site_url('login') ?>" class="font-medium text-blue-600 hover:underline">
+                        Login di sini
+                    </a>
+                </p>
             </div>
-            <div class="mb-4">
-                <!-- Mengubah warna label menjadi coklat gelap -->
-                <label for="password" class="block text-stone-700">Password</label>
-                <input type="password" name="password" id="password" class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-amber-600" required>
-            </div>
-            <div class="mb-6">
-                <!-- Mengubah warna label menjadi coklat gelap -->
-                <label for="password_confirm" class="block text-stone-700">Konfirmasi Password</label>
-                <input type="password" name="password_confirm" id="password_confirm" class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-amber-600" required>
-            </div>
-            <div class="flex items-center justify-between">
-                <!-- Mengubah warna tombol register menjadi coklat dan hover-nya -->
-                <button type="submit" class="w-full bg-amber-700 text-white px-4 py-2 rounded-md hover:bg-amber-800">Register</button>
-            </div>
-        </form>
-        <div class="text-center mt-4">
-            <!-- Mengubah warna teks "Sudah punya akun?" menjadi abu-abu gelap -->
-            <p class="text-gray-600">
-                Sudah punya akun?
-                <!-- Mengubah warna link login menjadi coklat dan hover-nya -->
-                <a href="<?= site_url('login') ?>" class="text-amber-700 hover:underline font-semibold">
-                    Login di sini
-                </a>
-            </p>
         </div>
     </div>
 </body>

@@ -11,6 +11,12 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'Home::index');
     $routes->get('home', 'Home::index');
 
+    // Rute untuk halaman Klasifikasi
+    $routes->get('Klasifikasi', 'Klasifikasi::index');
+    $routes->post('Klasifikasi/proxy', 'Klasifikasi::proxy'); // Proxy untuk backend jika diperlukan
+    $routes->get('Klasifikasi/model-info', 'Klasifikasi::getModelInfo'); // Get model info
+    $routes->post('Klasifikasi/predict', 'Klasifikasi::predict'); // Predict endpoint
+
     // Rute untuk halaman Akun
     $routes->get('akun', 'Akun::index');
     $routes->post('akun/update_profil', 'Akun::updateProfil');
@@ -28,13 +34,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('analisis/perform', 'AnalisisController::performAnalysis', ['as' => 'analisis.perform']);
 });
 
-
 // --- RUTE UNTUK TAMU (Dijaga oleh 'guest') ---
 $routes->group('', ['filter' => 'guest'], function ($routes) {
     $routes->get('login', 'Auth::index');
     $routes->get('register', 'Auth::register');
 });
-
 
 // --- RUTE AKSI PUBLIK (Proses Login, Register, Logout) ---
 $routes->post('login', 'Auth::login');

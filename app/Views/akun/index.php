@@ -31,7 +31,7 @@
                         <label for="email" class="block text-gray-700">Email</label>
                         <input type="email" name="email" id="email" value="<?= esc($user['email']) ?>" class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600">
                     </div>
-                    <button type="submit" class="w-full bg-amber-700 text-white px-4 py-2 rounded-md hover:bg-amber-800">Simpan Perubahan Profil</button>
+                    <button type="submit" class="w-full bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-800">Simpan Perubahan Profil</button>
                 </form>
             </div>
         </div>
@@ -53,7 +53,7 @@
                         <label for="konfirmasi_password" class="block text-gray-700">Konfirmasi Password Baru</label>
                         <input type="password" name="konfirmasi_password" id="konfirmasi_password" class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600" required>
                     </div>
-                    <button type="submit" class="w-full bg-amber-700 text-white px-4 py-2 rounded-md hover:bg-amber-800">Ubah Password</button>
+                    <button type="submit" class="w-full bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-800">Ubah Password</button>
                 </form>
             </div>
         </div>

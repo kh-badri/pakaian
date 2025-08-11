@@ -55,12 +55,11 @@
         <div class="spinner"></div>
     </div>
 
+    <?= $this->include('layout/navbar') ?>
     <div class="flex flex-col min-h-screen">
 
 
         <div class="flex flex-1">
-            <?= $this->include('layout/sidebar') ?>
-
             <main class="flex-1 p-4 sm:p-6">
                 <?= $this->renderSection('content') ?>
             </main>
