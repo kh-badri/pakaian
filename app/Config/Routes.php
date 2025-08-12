@@ -17,17 +17,19 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('Klasifikasi/model-info', 'Klasifikasi::getModelInfo'); // Get model info
     $routes->post('Klasifikasi/predict', 'Klasifikasi::predict'); // Predict endpoint
 
+    // PERBAIKAN: Ganti saveHistory menjadi simpan
+    $routes->post('klasifikasi/simpan', 'Klasifikasi::simpan'); // <-- DIPERBAIKI DI SINI
+
+    // Alternative: Jika ingin tetap pakai saveHistory, pastikan method ada di controller
+    // $routes->post('klasifikasi/saveHistory', 'Klasifikasi::saveHistory');
+    $routes->get('history', 'History::index');
+    $routes->post('history/update/(:num)', 'History::update/$1');  // via AJAX JSON
+    $routes->post('history/delete/(:num)', 'History::delete/$1');  // via AJAX JSON
+
     // Rute untuk halaman Akun
     $routes->get('akun', 'Akun::index');
     $routes->post('akun/update_profil', 'Akun::updateProfil');
     $routes->post('akun/update_sandi', 'Akun::updateSandi');
-
-    // --- RUTE CRUD UNTUK DATASET ---
-    $routes->get('dataset', 'DatasetController::index');
-    $routes->post('dataset/upload', 'DatasetController::upload');
-    $routes->get('dataset/edit/(:num)', 'DatasetController::edit/$1');
-    $routes->post('dataset/update/(:num)', 'DatasetController::update/$1');
-    $routes->post('dataset/delete/(:num)', 'DatasetController::delete/$1');
 
     // --- RUTE UNTUK ANALISIS DATA ---
     $routes->get('analisis', 'AnalisisController::index', ['as' => 'analisis.index']);

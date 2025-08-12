@@ -19,7 +19,7 @@
                     class="font-semibold px-4 py-1 rounded-full hover:bg-blue-700 hover:text-white transition">
                     Klasifikasi
                 </a>
-                <a href="<?= base_url('/laporan') ?>"
+                <a href="<?= base_url('/history') ?>"
                     class="font-semibold px-4 py-1 rounded-full hover:bg-blue-700 hover:text-white transition">
                     Laporan
                 </a>

@@ -3,213 +3,127 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use CodeIgniter\HTTP\CURLRequest;
 use CodeIgniter\API\ResponseTrait;
-use App\Models\PredictionHistoryModel; // Import model histori
+use App\Models\HistoryModel; // ganti model agar sesuai tabel tanpa user_id
 
 class Klasifikasi extends BaseController
 {
-    use ResponseTrait; // Menggunakan ResponseTrait untuk kemudahan respons JSON
+    use ResponseTrait;
 
-    // URL Backend Python untuk proyek klasifikasi
     protected $pythonBackendUrl = 'http://127.0.0.1:5001';
 
-    /**
-     * Constructor untuk inisialisasi dan pengecekan login.
-     */
-    public function __construct()
-    {
-        // Memastikan user sudah login sebelum mengakses halaman klasifikasi
-        // Jika Anda menggunakan filter 'auth' di routes.php, ini bisa menjadi validasi tambahan.
-        if (!session()->get('isLoggedIn')) {
-            // Menggunakan redirect() dari helper URL untuk pengalihan yang lebih bersih
-            header('Location: ' . base_url('login'));
-            exit();
-        }
-    }
-
-    /**
-     * Menampilkan halaman utama untuk klasifikasi.
-     * Metode ini hanya me-load view dan melewatkan data sesi.
-     */
     public function index()
     {
         $data = [
-            'title' => 'Klasifikasi Bahan Pakaian - SVM',
-            'user_data' => [
-                'username' => session()->get('username') ?? 'User' // Ambil username dari sesi
-            ]
+            'title' => 'Klasifikasi Bahan Pakaian - SVM'
         ];
-
         return view('klasifikasi/index', $data);
     }
 
-    //--------------------------------------------------------------------
-
-    /**
-     * Mengambil informasi model dan dataset dari backend Python.
-     * Endpoint ini dipanggil oleh AJAX (fetch API) dari view 'klasifikasi/index'.
-     */
     public function getModelInfo()
     {
-        // Pastikan request datang dari AJAX untuk keamanan
         if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(403)->setJSON(['message' => 'Akses tidak diizinkan.']);
+            return $this->failForbidden('Akses tidak diizinkan.');
         }
-
-        $client = \Config\Services::curlrequest(); // Menggunakan CodeIgniter's CURLRequest
-        $apiUrl = $this->pythonBackendUrl . '/info';
-
         try {
-            // Mengirim permintaan GET ke endpoint /info Python
-            $response = $client->get($apiUrl, [
-                'timeout' => 10, // Batas waktu 10 detik
-                'headers' => [
-                    'X-Requested-With' => 'XMLHttpRequest', // Menandakan ini adalah AJAX request
-                    'X-CSRF-TOKEN' => csrf_hash() // Mengirim CSRF token (penting untuk sesi CI4)
-                ]
-            ]);
-
-            // Memeriksa status kode HTTP dari API Python
-            if ($response->getStatusCode() === 200) {
-                // Mengembalikan respons JSON langsung dari backend Python
-                return $this->response->setJSON(json_decode($response->getBody(), true));
-            } else {
-                // Menangani jika API Python mengembalikan status error
-                return $this->response->setStatusCode($response->getStatusCode())->setJSON([
-                    'success' => false,
-                    'message' => 'Gagal mendapatkan info model dari API Python.',
-                    'raw_response' => $response->getBody() // Untuk debugging
-                ]);
-            }
+            $client = \Config\Services::curlrequest();
+            $response = $client->get($this->pythonBackendUrl . '/info', ['timeout' => 10]);
+            return $this->response->setJSON($response->getBody());
         } catch (\Exception $e) {
-            // Menangani error jaringan atau timeout
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat memanggil API Python: ' . $e->getMessage()
-            ]);
+            log_message('error', '[Klasifikasi API Error] getModelInfo: ' . $e->getMessage());
+            return $this->failServerError('Tidak dapat terhubung ke server klasifikasi.');
         }
     }
 
-    //--------------------------------------------------------------------
-
-    /**
-     * Mengirim data input dari pengguna ke backend Python untuk prediksi.
-     * Endpoint ini dipanggil oleh AJAX (fetch API) dari view 'klasifikasi/index'.
-     */
     public function predict()
     {
-        // Pastikan request datang dari AJAX dan menggunakan metode POST
         if (!$this->request->isAJAX() || $this->request->getMethod() !== 'post') {
-            return $this->response->setStatusCode(403)->setJSON(['message' => 'Akses tidak diizinkan.']);
+            return $this->failForbidden('Akses tidak diizinkan.');
         }
 
-        // Ambil data JSON dari body request
         $inputData = $this->request->getJSON(true);
 
-        // Validasi input dasar
-        if (!isset($inputData['Elastisitas']) || !isset($inputData['Tekstur']) || !isset($inputData['Ketebalan'])) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Data input tidak lengkap.'
-            ]);
-        }
-
-        // Validasi rentang ketebalan
-        $ketebalan = floatval($inputData['Ketebalan']);
-        if ($ketebalan < 0.2 || $ketebalan > 2.0) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success' => false,
-                'message' => 'Ketebalan harus dalam rentang 0.2 - 2.0 mm.'
-            ]);
-        }
-
-        $client = \Config\Services::curlrequest();
-        $apiUrl = $this->pythonBackendUrl . '/predict';
-
         try {
-            // Mengirim permintaan POST ke endpoint /predict Python
-            $response = $client->post($apiUrl, [
-                'json' => $inputData, // Mengirim data input dalam format JSON
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json',
-                    'X-Requested-With' => 'XMLHttpRequest', // Menandakan ini adalah AJAX request
-                    'X-CSRF-TOKEN' => csrf_hash() // Mengirim CSRF token
-                ],
-                'timeout' => 15 // Batas waktu 15 detik untuk prediksi
+            $client = \Config\Services::curlrequest();
+            $response = $client->post($this->pythonBackendUrl . '/predict', [
+                'json' => $inputData,
+                'timeout' => 15
             ]);
-
-            // Memeriksa status kode HTTP dari API Python
-            if ($response->getStatusCode() === 200) {
-                // Mengembalikan respons JSON langsung dari backend Python
-                return $this->response->setJSON(json_decode($response->getBody(), true));
-            } else {
-                // Menangani jika API Python mengembalikan status error
-                return $this->response->setStatusCode($response->getStatusCode())->setJSON([
-                    'success' => false,
-                    'message' => 'Prediksi gagal. Respon dari API Python tidak valid.',
-                    'raw_response' => $response->getBody() // Untuk debugging
-                ]);
-            }
+            return $this->response->setJSON($response->getBody());
         } catch (\Exception $e) {
-            // Menangani error jaringan atau timeout
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat memanggil API Python: ' . $e->getMessage()
-            ]);
+            log_message('error', '[Klasifikasi API Error] predict: ' . $e->getMessage());
+            return $this->failServerError('Gagal melakukan prediksi. Tidak dapat terhubung ke server.');
         }
     }
 
-    //--------------------------------------------------------------------
 
-    /**
-     * Menyimpan hasil prediksi ke tabel histori `prediction_history`.
-     * Endpoint ini dipanggil oleh AJAX (fetch API) dari view 'klasifikasi/index'.
-     */
-    public function saveHistory()
+    public function simpan()
     {
-        // Pastikan request datang dari AJAX dan menggunakan metode POST
-        if (!$this->request->isAJAX() || $this->request->getMethod() !== 'post') {
-            return $this->response->setStatusCode(403)->setJSON(['message' => 'Akses tidak diizinkan.']);
+        // Wajib JSON
+        if (stripos($this->request->getHeaderLine('Content-Type') ?? '', 'application/json') === false) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'messages' => ['error' => 'Content-Type harus application/json'],
+                'csrf' => csrf_hash()
+            ]);
         }
 
-        // Ambil data JSON dari body request
-        $dataToSave = $this->request->getJSON(true);
-
-        // Validasi data yang diterima dari frontend
-        if (empty($dataToSave) || !isset($dataToSave['input']) || !isset($dataToSave['prediction'])) {
-            return $this->failValidationError('Data yang dikirim tidak lengkap untuk disimpan.');
+        $payload = $this->request->getJSON(true); // assoc array
+        if (!$payload) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'messages' => ['error' => 'Payload JSON tidak valid'],
+                'csrf' => csrf_hash()
+            ]);
         }
 
-        $historyModel = new PredictionHistoryModel();
-        // Asumsi user ID disimpan di sesi setelah login
-        $userId = session()->get('id');
+        $input      = $payload['input']      ?? [];
+        $prediction = $payload['prediction'] ?? [];
+        $conf       = $prediction['confidence'] ?? [];
 
-        // Siapkan data untuk disimpan ke database
-        $insertData = [
-            'user_id' => $userId,
-            'input_elastisitas' => $dataToSave['input']['elastisitas'] ?? null,
-            'input_tekstur' => $dataToSave['input']['tekstur'] ?? null,
-            'input_ketebalan' => $dataToSave['input']['ketebalan'] ?? null,
-            'predicted_bahan_kain' => $dataToSave['prediction']['bahanKain'] ?? null,
-            'predicted_jenis_pakaian' => $dataToSave['prediction']['jenisPakaian'] ?? null,
-            'confidence_bahan_kain' => $dataToSave['prediction']['confidence']['bahanKain'] ?? null,
-            'confidence_jenis_pakaian' => $dataToSave['prediction']['confidence']['jenisPakaian'] ?? null,
-            // 'prediction_time' akan otomatis diisi oleh database karena DEFAULT CURRENT_TIMESTAMP
+        // Validasi minimal
+        $errors = [];
+        if (empty($input['elastisitas']))  $errors['elastisitas']   = 'Elastisitas wajib diisi.';
+        if (empty($input['tekstur']))      $errors['tekstur']       = 'Tekstur wajib diisi.';
+        if ($input['ketebalan'] === null || $input['ketebalan'] === '' || !is_numeric($input['ketebalan']))
+            $errors['ketebalan'] = 'Ketebalan wajib angka.';
+        if (empty($prediction['bahanKain']))    $errors['bahan_kain']    = 'Prediksi bahan kain kosong.';
+        if (empty($prediction['jenisPakaian'])) $errors['jenis_pakaian'] = 'Prediksi jenis pakaian kosong.';
+
+        if ($errors) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => 'error',
+                'messages' => $errors,
+                'csrf' => csrf_hash()
+            ]);
+        }
+
+        $data = [
+            'elastisitas'        => (string) $input['elastisitas'],
+            'tekstur'            => (string) $input['tekstur'],
+            'ketebalan'          => (float)  $input['ketebalan'],
+            'bahan_kain'         => (string) $prediction['bahanKain'],
+            'jenis_pakaian'      => (string) $prediction['jenisPakaian'],
+            'conf_bahan_kain'    => isset($conf['bahanKain'])    ? (float) $conf['bahanKain']    : null,
+            'conf_jenis_pakaian' => isset($conf['jenisPakaian']) ? (float) $conf['jenisPakaian'] : null,
+            'raw_json'           => json_encode($payload, JSON_UNESCAPED_UNICODE),
         ];
 
+        $model = new HistoryModel();
         try {
-            // Lakukan insert data ke tabel histori
-            if ($historyModel->insert($insertData)) {
-                return $this->respondCreated(['success' => true, 'message' => 'Data histori berhasil disimpan.']);
-            } else {
-                // Jika insert gagal (misal karena validasi model atau error DB lain)
-                return $this->fail('Gagal menyimpan data histori ke database.', 500);
-            }
-        } catch (\Exception $e) {
-            // Tangani error level database
-            return $this->fail('Terjadi kesalahan database saat menyimpan histori: ' . $e->getMessage(), 500);
+            $model->insert($data);
+        } catch (\Throwable $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'messages' => ['error' => 'Gagal menyimpan ke database: ' . $e->getMessage()],
+                'csrf' => csrf_hash()
+            ]);
         }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Hasil klasifikasi berhasil disimpan ke history.',
+            'csrf' => csrf_hash() // kirim token baru
+        ]);
     }
 }
