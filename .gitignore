@@ -1,6 +1,6 @@
 # CodeIgniter 4 specific ignores
 /vendor/
-/writable/cache
+/writable/
 # .env
 # .env.testing
 
